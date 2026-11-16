@@ -9,7 +9,7 @@ double-checks everything they find, and you get a report you can read, hear and 
 2. The **Supervisor** works out what the product is and picks only the agents whose shops sell it.
 3. The agents research **at the same time** (Amazon, Flipkart, Myntra, and so on).
 4. The Supervisor **verifies** the results: prices, links, images and your budget.
-5. You get the final report on screen and spoken aloud. You can download it as PDF, HTML, CSV, Markdown or JSON.
+5. You get the final report on screen and spoken aloud. You can download it as a PDF or share it as a PDF.
 
 You can interrupt or change your request at any time ("make it under 800", "also check Croma", "which is cheapest?").
 Nothing starts over.
@@ -40,18 +40,12 @@ the app **does not work around it**. Those items show as *Reported* instead.
    - a search key, for example `SERPAPI_API_KEY` (without it, no research is possible)
    - `ANTHROPIC_API_KEY` (optional: better understanding, other languages, spoken summaries)
    - `USER_AGENT` (a contact URL or email, so shops can reach you)
-3. Create the database tables. Create `DB_NAME` first, then run both files **in order**, against that same database:
-   ```bash
-   mysql --host=YOUR_DB_HOST --port=3306 --user=YOUR_DB_USER --password YOUR_DB_NAME < migrations/000_base_tables.sql
-   mysql --host=YOUR_DB_HOST --port=3306 --user=YOUR_DB_USER --password YOUR_DB_NAME < migrations/001_research_runs.sql
-   ```
-   On Windows you can also open and run each file in MySQL Workbench. Existing tables are never changed or deleted.
-4. Check that everything is ready, then start the app:
+3. Check that everything is ready, then start the app:
    ```bash
    python check_setup.py --live
    flask --app run run
    ```
-5. Open the app, sign in, and you land in the Command Center (`/playground`).
+4. Open the app, sign in, and you land in the Command Center (`/playground`).
 
 Never commit your passwords or keys. Keep them only in `.env`.
 
@@ -109,5 +103,4 @@ responses. The app itself contains no fake data.
 
 - Code: `app/playground/`
 - Screens: `app/templates/playground.html`, `app/static/js/pg/`, `app/static/css/playground.css`
-- Database scripts: `migrations/`
 - Plan and progress: `docs/AGILE_PLAN.md`
