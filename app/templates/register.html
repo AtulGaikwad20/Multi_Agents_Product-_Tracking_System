@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | RESQUORA</title>
+    <link rel="icon" href="{{ url_for('static', filename='pwa/icon-192.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<main class="auth-shell">
+
+    <img
+        src="{{ url_for('static', filename='images/auth-bg.jpg') }}"
+        alt=""
+        class="auth-bg"
+    >
+
+    <section class="auth-panel">
+
+        <div class="auth-form">
+
+            <div class="brand"><img class="brand-mark" src="{{ url_for('static', filename='images/resquora-mark.svg') }}" alt=""> RESQUORA</div>
+
+            <header class="form-head">
+                <h1>Create account</h1>
+                <p>Create an account to start researching products.</p>
+            </header>
+
+            <div
+                id="server-message"
+                class="message{% if error %} error{% elif success %} success{% endif %}"
+                role="alert"
+                {% if not (error or success) %}style="display: none;"{% endif %}
+            >{{ error or success }}</div>
+
+            <form
+                id="register-form"
+                method="POST"
+                action="{{ url_for('auth.register') }}"
+                novalidate
+            >
+                <div class="field">
+                    <label for="name">Name</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            placeholder="Enter your name"
+                            value="{{ request.form.get('name', '') }}"
+                            autocomplete="name"
+                            aria-describedby="name-message"
+                        >
+                    </div>
+                    <small id="name-message" class="field-message" aria-live="polite"></small>
+                </div>
+
+                <div class="field">
+                    <label for="email">Email</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-10 6L2 7"/></svg>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            value="{{ request.form.get('email', '') }}"
+                            autocomplete="email"
+                            aria-describedby="email-message"
+                        >
+                    </div>
+                    <small id="email-message" class="field-message" aria-live="polite"></small>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="3"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
+                            aria-describedby="password-message"
+                        >
+                        <button type="button" class="toggle-password" aria-label="Show password" aria-controls="password" aria-pressed="false">
+                            <svg class="icon-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <span id="strength-fill"></span>
+                        </div>
+                        <span id="strength-text">Enter a password</span>
+                    </div>
+                    <small id="password-message" class="field-message" aria-live="polite"></small>
+                </div>
+
+                <div class="field">
+                    <label for="confirm_password">Confirm password</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="3"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input
+                            type="password"
+                            id="confirm_password"
+                            name="confirm_password"
+                            placeholder="Re-enter your password"
+                            autocomplete="new-password"
+                            aria-describedby="confirm-message"
+                        >
+                        <button type="button" class="toggle-password" aria-label="Show password" aria-controls="confirm_password" aria-pressed="false">
+                            <svg class="icon-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <small id="confirm-message" class="field-message" aria-live="polite"></small>
+                </div>
+
+                <button type="submit" id="register-button" class="button button-full">
+                    <span id="register-button-text">CREATE ACCOUNT</span>
+                </button>
+            </form>
+
+        </div>
+
+        <p class="auth-switch">
+            Already have an account? <a href="{{ url_for('auth.login') }}" class="text-link">Login</a>
+        </p>
+
+    </section>
+
+    <aside class="showcase" aria-label="About RESQUORA">
+        <div class="showcase-bar">
+            <p class="showcase-title">Research before you buy.</p>
+            <p class="showcase-text">Compare products, prices and reviews across different shopping platforms from one place.</p>
+            <ul class="pill-list" aria-label="Platforms we search">
+                <li>Amazon</li>
+                <li>Flipkart</li>
+                <li>Meesho</li>
+                <li>Blinkit</li>
+            </ul>
+        </div>
+    </aside>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script src="{{ url_for('static', filename='js/password-toggle.js') }}"></script>
+
+</body>
+</html>

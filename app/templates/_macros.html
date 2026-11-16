@@ -1,0 +1,44 @@
+{#-
+  Shared template macros.
+
+  Usage (any template):
+      {% from '_macros.html' import stars, external, evidence_badge %}
+
+  CSS these macros depend on (keep in sync):
+      .rating  .star  .rating-count  .ext-link   -> defined in static/css/playground.css AND static/css/style.css
+      .badge .verified|.reported|.unavailable|.unretrieved -> static/css/playground.css
+  Any page that uses a macro must load one of those stylesheets, or the output renders unstyled.
+-#}
+
+{# Star rating with an accessible label. Anything that is not a number between 0 and 5 is treated as "no rating". #}
+{% macro stars(rating, count) %}
+{% if rating is number and 0 < rating <= 5 %}
+<span class="rating" role="img" aria-label="Rated {{ '%.1f'|format(rating) }} out of 5">
+    <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    {{ '%.1f'|format(rating) }}
+</span>
+{% if count %}<span class="rating-count">({{ count|number }})</span>{% endif %}
+{% else %}
+<span class="rating-count">No ratings</span>
+{% endif %}
+{% endmacro %}
+
+{# External link. Only real http(s) URLs become links; anything else (javascript:, data:, empty) is shown as plain text. #}
+{% macro external(url, text, css_class='') %}
+{% if url and (url.startswith('https://') or url.startswith('http://')) %}
+<a href="{{ url }}" class="ext-link {{ css_class }}" target="_blank" rel="noopener noreferrer nofollow">{{ text }}</a>
+{% else %}
+<span class="{{ css_class }}">{{ text }}</span>
+{% endif %}
+{% endmacro %}
+
+{# Evidence status badge: the same four statuses the playground uses everywhere. #}
+{% macro evidence_badge(status) %}
+{% set labels = {
+    'verified': 'Verified at source',
+    'reported': 'Reported by search · not confirmed',
+    'unavailable': 'Unavailable',
+    'unretrieved': 'Could not retrieve'
+} %}
+{% if status in labels %}<span class="badge {{ status }}" title="{{ labels[status] }}">{{ labels[status] }}</span>{% endif %}
+{% endmacro %}

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+{% from '_macros.html' import evidence_badge %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1d2340">
+    <meta name="csrf-token" content="{{ csrf }}">
+    <title>Command Center | RESQUORA</title>
+    <link rel="manifest" href="{{ url_for('pg.manifest') }}">
+    <link rel="icon" href="{{ url_for('static', filename='pwa/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='pwa/icon-192.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/playground.css') }}">
+</head>
+<body data-view="talk" data-layout="desktop">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+    <div class="brand"><img class="logo" src="{{ url_for('static', filename='images/resquora-mark.svg') }}" alt=""> RESQUORA <small>Multi-Agent Command Center</small></div>
+    <div class="topbar-right">
+        <span class="chip" id="chip-search" title="Search provider">Search: …</span>
+        <span class="chip" id="chip-llm" title="Language model">AI model: …</span>
+        <button type="button" class="chip btn-chip" id="btn-location" aria-haspopup="dialog">Location: off</button>
+        <label class="visually-hidden" for="lang">Voice input language (automatically updated from your request)</label>
+        <select id="lang" class="select">
+            {% for code, label in languages %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+        </select>
+        <button type="button" class="chip btn-chip notification-toggle" id="btn-notify" aria-pressed="false"
+                title="Get a browser notification when research finishes">
+            <svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path>
+            </svg>
+            <span id="notify-label">Notifications: Disabled</span>
+        </button>
+        <span class="who" title="Signed in">{{ name }}</span>
+        <a class="link" href="{{ url_for('auth.logout') }}">Log out</a>
+    </div>
+</header>
+<div id="banner" class="banner" role="status" hidden></div>
+
+<main id="main" class="layout">
+    <!-- TALK -->
+    <section class="panel talk" id="panel-talk" aria-labelledby="h-talk">
+        <h2 id="h-talk">NEXUS</h2>
+        <div id="search-limit-note" class="search-limit-note" role="status" aria-live="polite"
+             title="Counts newly started research searches for this account. Your provider's separate API quota is tracked by that provider.">Loading monthly search usage…</div>
+        <div id="transcript" class="transcript" role="log" aria-live="polite" aria-relevant="additions">
+            <div class="bubble sup">Hello {{ name }}. I’m NEXUS. Tell me what to research. You can type or speak, in any language, for anything from safety pins to wardrobes.</div>
+        </div>
+        <div id="loc-prompt" class="prompt" hidden>
+            <p id="loc-prompt-text"></p>
+            <div class="row">
+                <button type="button" class="btn" id="loc-prompt-share">Share location…</button>
+                <button type="button" class="btn ghost" id="loc-prompt-skip">Continue without</button>
+            </div>
+        </div>
+        <form id="composer" class="composer" autocomplete="off">
+            <label class="visually-hidden" for="input">Your request</label>
+            <textarea id="input" rows="2" maxlength="500" placeholder="e.g. steel almirah under ₹15000, or say it in Hindi, Tamil, Spanish…" enterkeyhint="send"></textarea>
+            <div class="row">
+                <button type="button" class="btn mic" id="btn-mic" aria-label="Start microphone" aria-pressed="false">
+                    <svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                        <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"></path>
+                    </svg>
+                    <span>MIC</span>
+                </button>
+                <button type="submit" class="btn primary" id="btn-send">Send</button>
+                <button type="button" class="btn danger" id="btn-stop" hidden>Interrupt</button>
+                <button type="button" class="icon-btn dark" id="btn-micset" aria-haspopup="dialog" title="Microphone settings and test">⚙<span class="visually-hidden">Microphone settings</span></button>
+            </div>
+            <div class="row small">
+                <label><input type="checkbox" id="chk-speak" checked> Speak replies</label>
+                <button type="button" class="linkbtn" id="btn-hush">Stop speaking</button>
+                <button type="button" class="linkbtn" id="btn-new">New topic</button>
+            </div>
+            <div id="mic-live" class="miclive" hidden aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="mic-live-text">Listening…</span></div>
+            <p id="voice-note" class="note" hidden></p>
+        </form>
+        <details class="history"><summary>Your research history (all devices)</summary><ul id="history" class="plain"></ul></details>
+    </section>
+
+    <!-- OFFICE / COMMAND CENTER -->
+    <section class="panel office" id="panel-office" aria-labelledby="h-office">
+        <h2 id="h-office" class="visually-hidden">Command center</h2>
+        <div class="mission" id="mission">
+            <div class="mission-text">
+                <span class="eyebrow">Current mission</span>
+                <strong id="mission-title">No mission yet</strong>
+                <span id="phase" class="phase" aria-live="polite">Waiting for a request.</span>
+            </div>
+            <dl class="stats" aria-label="Live statistics">
+                <div><dt>Agents</dt><dd id="st-agents">0/0</dd></div>
+                <div><dt>Searches</dt><dd id="st-search">0</dd></div>
+                <div><dt>Pages opened</dt><dd id="st-pages">0</dd></div>
+                <div><dt>Listings</dt><dd id="st-found">0</dd></div>
+                <div><dt>Time</dt><dd id="st-time">0:00</dd></div>
+            </dl>
+        </div>
+        <ol class="stepper" id="stepper" aria-label="Mission progress">
+            <li data-step="understand">Understand</li><li data-step="brief">Brief team</li>
+            <li data-step="research">Research</li><li data-step="meet">Findings meeting</li>
+            <li data-step="verify">Verify</li><li data-step="report">Report</li>
+        </ol>
+        <section class="agent-section" aria-labelledby="h-agents">
+            <h3 id="h-agents">Employee agents</h3>
+            <div class="agent-box"><div class="desks" id="desks"></div></div>
+        </section>
+        <section class="meeting" id="meeting" aria-labelledby="h-meet" hidden>
+            <h3 id="h-meet">Meeting room: <span id="meeting-name"></span></h3>
+            <ol id="meeting-log" class="plain"></ol>
+        </section>
+        <section aria-labelledby="h-tasks">
+            <h3 id="h-tasks">Task board</h3>
+            <div class="board" id="board">
+                <div><h4>Assigned</h4><ul class="plain" data-col="assigned"></ul></div>
+                <div><h4>Researching</h4><ul class="plain" data-col="researching"></ul></div>
+                <div><h4>Done</h4><ul class="plain" data-col="done"></ul></div>
+                <div><h4>Blocked / error</h4><ul class="plain" data-col="blocked"></ul></div>
+            </div>
+        </section>
+    </section>
+
+    <!-- RIGHT COLUMN: tabs -->
+    <div class="side-tabs" role="tablist" aria-label="Findings views" id="side-tabs">
+        <button type="button" role="tab" data-side="results" aria-selected="true">Report</button>
+        <button type="button" role="tab" data-side="evidence" aria-selected="false">Evidence</button>
+        <button type="button" role="tab" data-side="log" aria-selected="false">Log</button>
+    </div>
+    <section class="panel results" id="panel-results" aria-labelledby="h-res" role="tabpanel">
+        <h2 id="h-res">Verified findings</h2>
+        <div id="report" class="report"><p class="empty">Results appear here once the team has reported and the Supervisor has verified them.</p></div>
+    </section>
+    <section class="panel evidence" id="panel-evidence" aria-labelledby="h-ev" role="tabpanel">
+        <h2 id="h-ev">Source verification</h2>
+        <p class="desk-role">Every fact, where it came from, when, and how far it can be trusted.</p>
+        <div id="evidence">
+            <p class="empty">Evidence appears after NEXUS finishes verifying. Every fact will carry one of these labels:</p>
+            <ul class="legend">
+                <li>{{ evidence_badge('verified') }} read from the retailer's own page at the time shown</li>
+                <li>{{ evidence_badge('reported') }} supplied by the search provider only</li>
+                <li>{{ evidence_badge('unavailable') }} the source says it does not exist or is out of stock</li>
+                <li>{{ evidence_badge('unretrieved') }} we tried and could not get it</li>
+            </ul>
+        </div>
+    </section>
+    <section class="panel log" id="panel-log" aria-labelledby="h-log" role="tabpanel">
+        <h2 id="h-log">Activity log</h2>
+        <ol id="activity" class="plain activity"></ol>
+    </section>
+</main>
+
+<nav class="tabbar" aria-label="Sections">
+    <button type="button" data-go="talk" aria-current="true">💬<span>Talk</span></button>
+    <button type="button" data-go="office">🏢<span>Office</span></button>
+    <button type="button" data-go="results">📋<span>Results</span></button>
+    <button type="button" data-go="evidence">🔍<span>Evidence</span></button>
+    <button type="button" data-go="log">🧾<span>Log</span></button>
+</nav>
+
+<dialog id="mic-dialog" aria-labelledby="mic-title">
+    <form method="dialog">
+        <h2 id="mic-title">Microphone &amp; voice</h2>
+        <p id="mic-support" class="desk-role"></p>
+        <fieldset>
+            <legend>How voice works</legend>
+            <label><input type="checkbox" id="opt-autosend" checked> Send automatically when I stop speaking</label>
+            <label><input type="checkbox" id="opt-handsfree"> Hands-free: listen again after NEXUS finishes speaking</label>
+        </fieldset>
+        <fieldset>
+            <legend>Test your microphone</legend>
+            <p class="desk-role" id="mic-perm">Permission: checking…</p>
+            <div class="meter" aria-hidden="true"><i id="meter-bar"></i></div>
+            <p class="desk-role" id="mic-test-result">Press the button and speak for a few seconds. The bar should move.</p>
+            <button type="button" class="btn" id="btn-mictest">Test microphone</button>
+        </fieldset>
+        <p class="desk-role">Voice recognition runs in your browser. In Chrome and Edge the audio is processed by the browser vendor's speech service, so it needs an internet connection. Say “stop” while the team is working to interrupt.</p>
+        <div class="row"><button type="submit" class="btn ghost">Close</button></div>
+    </form>
+</dialog>
+
+<dialog id="error-dialog" class="message-dialog" aria-labelledby="error-title" aria-describedby="error-message" aria-modal="true">
+    <div class="message-dialog-content">
+        <span class="dialog-mark" aria-hidden="true">!</span>
+        <h2 id="error-title">Something went wrong</h2>
+        <p id="error-message" role="alert"></p>
+        <button type="button" class="btn primary" id="btn-error-close" autofocus>OK</button>
+    </div>
+</dialog>
+
+<dialog id="loc-dialog" aria-labelledby="loc-title">
+    <form method="dialog" id="loc-form">
+        <h2 id="loc-title">Use your location?</h2>
+        <p>Location is <strong>optional</strong>. It helps me look for local availability, delivery estimates and regional prices when your request needs it. Without it I still research online normally.</p>
+        <ul class="small-list">
+            <li>Asked once, never tracked. Raw coordinates are not stored; only a place name, for 24 hours.</li>
+            <li>Results based on location are <strong>estimates</strong>. I never claim a store has stock or can deliver unless that retailer says so.</li>
+            <li>You can remove it any time, or change the permission in your browser or device settings.</li>
+        </ul>
+        <fieldset>
+            <legend>Option 1: use this device</legend>
+            <label><input type="radio" name="prec" value="approximate" checked> Approximate (city / area)</label>
+            <label><input type="radio" name="prec" value="precise"> Precise (neighbourhood)</label>
+            <label><input type="checkbox" id="loc-geo-consent"> I agree to send my position once to the place-name service (OpenStreetMap Nominatim) to turn it into a place name.</label>
+            <button type="button" class="btn primary" id="loc-device">Use device location</button>
+        </fieldset>
+        <fieldset>
+            <legend>Option 2: type it instead</legend>
+            <label class="visually-hidden" for="loc-manual">City, area or postal code</label>
+            <input id="loc-manual" type="text" maxlength="100" placeholder="City, area or postal code">
+            <button type="button" class="btn" id="loc-manual-save">Use this place</button>
+        </fieldset>
+        <p id="loc-error" class="error" role="alert" hidden></p>
+        <div class="row">
+            <button type="button" class="btn ghost" id="loc-forget">Forget my location</button>
+            <button type="submit" class="btn ghost" value="close">Close</button>
+        </div>
+    </form>
+</dialog>
+
+<script type="module" src="{{ url_for('static', filename='js/pg/app.js', v='usage-counter-6') }}"></script>
+</body>
+</html>

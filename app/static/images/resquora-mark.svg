@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">RESQUORA mark</title>
+  <rect width="64" height="64" rx="16" fill="#1d2340"/>
+  <path d="M47.4 37.6a19 19 0 1 1 .8-10.8" fill="none" stroke="#91dec5" stroke-linecap="round" stroke-width="4.5"/>
+  <path d="m43.9 44.1 9.2 9.2" fill="none" stroke="#f0ab62" stroke-linecap="round" stroke-width="4.5"/>
+  <path d="M25 42V22h8.2a6 6 0 0 1 0 12H25m7.2 0L42 42" fill="none" stroke="#f0ab62" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+</svg>
